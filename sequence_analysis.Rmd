@@ -1,0 +1,256 @@
+
+##Sequence Analysis Lab
+---
+This lab is for a BIOS 26120 lab involving analysis of ORFs in a genome.
+---
+
+RUN PREREQUISITE CODE CHUNK BELOW
+```{r}
+require("seqinr")
+sarscov2 <- read.fasta(file="sarscov2.fasta")
+```
+
+```{r}
+#print head and tail of SARS-COV2 sequence
+sarscov2_seq <- sarscov2[[1]]
+print(head(sarscov2_seq, 10))
+print(tail(sarscov2_seq, 10))
+
+```
+
+
+
+```{r}
+#using GenBank to locate sequence of tRNA Homo Sapiens
+choosebank("genbank")
+tRNA.hsapiens <- query("M=tRNA AND SP=Homo sapiens")
+tRNA.hsapiens$nelem[[1]]
+```
+<span style="color:blue"> There are 38 sequences that match this query. \span
+
+
+```{r}
+#writing helper function to find complementary strand
+compStrand <- function(seq){
+  #create new vec
+  comp_seq <- vector(length=length(seq))
+  #assign values 
+  comp_seq[seq == "g"] <- "c"
+  comp_seq[seq == "c"] <- "g"
+  comp_seq[seq == "t"] <- "a"
+  comp_seq[seq == "a"] <- "t"
+  #reverse 
+  comp_seq <- rev(comp_seq)
+  return (comp_seq)
+}
+
+#testing
+exDNA <- c("a", "t", "c", "g", "a", "g")
+print(compStrand(exDNA))
+```
+
+
+<span style="color:green"> 3.2 \span
+```{r}
+mytable <- table(sarscov2_seq)
+mytable
+```
+
+```{r}
+#function to calculate frequency of pyrimidines and purines
+frequencyPyrimidine <- function(sequence){
+  pyr_count = 0
+  for (nuc in sequence){
+    if ((nuc == "c") || (nuc == "t")){
+      pyr_count = pyr_count + 1
+    }
+  }
+  return (pyr_count/length(sequence))
+}
+
+frequencyPurine <- function(sequence){
+  pur_count = 0
+  for (nuc in sequence){
+    if ((nuc == "a") || (nuc == "g")){
+      pur_count = pur_count + 1
+    }
+  }
+  return (pur_count/length(sequence))
+}
+```
+
+
+<span style="color:green"> 3.4 \span
+```{r}
+#function to find sequence weight in kD
+
+seqWeight <- function(sequence, type){
+weight = 0
+  
+  for (nuc in sequence){
+    if (missing(type)){ #if DNA
+      if (nuc == "a"){
+        weight = weight + 313.2
+      }
+      if (nuc == "t"){
+        weight = weight + 304.2
+      }
+      if (nuc == "c"){
+        weight = weight + 289.2
+      }
+      if (nuc == "g"){
+        weight = weight + 329.2
+      }
+    }
+    else { #if RNA
+      if (nuc == "a"){
+        weight = weight + 329.2
+      }
+      if (nuc == "u"){
+        weight = weight + 306.2
+      }
+      if (nuc == "c"){
+        weight = weight + 305.2
+      }
+      if (nuc == "g"){
+        weight = weight + 345.2
+      }
+    }
+  }
+  return (weight)
+}
+
+seqWeight(exDNA)
+
+```
+
+```{r}
+hiv <- read.fasta("HIV.fasta")[[1]]
+dengue <- read.fasta("dengue.fasta")[[1]]
+
+#calculations
+print(frequencyPyrimidine(sarscov2_seq)/frequencyPurine(sarscov2_seq))
+print(frequencyPyrimidine(hiv)/frequencyPurine(hiv))
+print(frequencyPyrimidine(dengue)/frequencyPurine(dengue))
+
+
+print((seqWeight(sarscov2_seq))/length(sarscov2_seq))
+print((seqWeight(hiv))/length(hiv))
+print((seqWeight(dengue))/length(dengue))
+```
+
+##ORF Calculations
+
+```{r}
+isStartCodon <- function(codon) {
+  bool = 0
+  if ((codon[1] == "a") && (codon[2] == "t") && (codon[3] == "g")){
+    bool = 1
+  }
+  return (bool)
+}
+```
+
+
+<span style="color:green"> 4.2 </span>
+```{r}
+isStopCodon <- function(codon) {
+
+  bool = 0
+  if ((codon[1] == "t") && (codon[2] == "a") && (codon[3] == "a")){
+    bool = 1
+  }
+  else if ((codon[1] == "t") && (codon[2] == "a") && (codon[3] == "g")){
+    bool = 1
+  }
+  else if ((codon[1] == "t") && (codon[2] == "g") && (codon[3] == "a")){
+    bool = 1
+  }
+  return (bool)
+}
+
+```
+
+
+
+<span style="color:green"> 4.3 \span
+```{r}
+findStartCodons <- function(seq) {
+  #make new vector to store indices of start codons
+  startCodons <- vector()
+  j=1
+  
+  # check whether each 3-letter code is a start codon
+  for (i in 1:length(seq)){
+    codon <- c(seq[i], seq[i+1], seq[i+2])
+    if (isStartCodon(codon)){
+      startCodons[j] <- i
+      j = j+1
+    }
+  }
+  return (startCodons)
+}
+
+
+
+findStopCodons <- function(seq) {
+#make new vector to store indices of start codons
+  stopCodons <- vector()
+  j=1
+  
+  # check whether each 3-letter code is a start codon
+  for (i in 1:length(seq)){
+    codon <- c(seq[i], seq[i+1], seq[i+2])
+    if (isStopCodon(codon)){
+      stopCodons[j] <- i
+      j = j+1
+    }
+  }
+  return (stopCodons)
+}
+
+#exDNA <- c("a","t","g","a","c")
+#findStartCodons(exDNA)
+
+
+findORF <- function(seq, minLength) {
+  startcodons <- findStartCodons(seq)
+  stopcodons <- findStopCodons(seq)
+  usedStop <- vector() # integer vector that keeps track of stop codons that have already been paired with a start codon
+  ORFs <- character() # character vector that keeps track of the ORFs that you found
+  o <- 1 #for usedStop and for ORFs
+  
+  for (i in startcodons) {
+    if (length(usedStop)){
+      if (i > tail(usedStop, n=1)){
+        break
+      }
+    }
+    for (j in stopcodons) {
+    
+      if (!(j %in% usedStop) && (j > i) && ((j - i + 1) %% 3 == 0) && ((j - i) >= minLength)){
+        #print(i)
+        orf <- paste(i, j, sep=" to ")
+        #print(orf)
+        # store the string above in ORFs
+        ORFs[o] <- orf
+        # store the index of the used stop codon in usedStop
+        usedStop[o] <- j
+        o <- o+1
+        
+        break
+      }
+    }
+  }
+  return(ORFs)
+}
+
+```
+
+```{r} 
+#find ORFs for HIV, Zika sequences
+(findORF(hiv, 300))
+
+zika <- read.fasta("zika.fasta")
+(findORF(zika, 300))
+```
