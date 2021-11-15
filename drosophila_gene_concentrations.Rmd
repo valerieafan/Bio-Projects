@@ -1,0 +1,417 @@
+---
+title: "Fan_Val_Tuesday"
+author: "Valerie Fan"
+date: "5/6/2020"
+output: html_document
+---
+
+```{r}
+#This Lab for BIOS 20189 (Fundamentals of Developmental Biology) dealt with graphing the positional concentration of Bicoid, a maternal effect gene that localizes with anterior-posterior patterning on developing Drosophila embryos and is thought to function as a morphogen. Later I also graph the positional concentrations of Hunchback and Kruppel, two other genes implicated in development during embryogenesis.
+
+
+rm(list=ls())
+#Prelab
+#parameters
+Jo <- 1 # source flux
+K<- 0.01 # degradation rate
+D<- 10 # diffusivity, diffusion constant, µm^2/sec
+L<- 100 # length of cell
+Co <- Jo/(sqrt(D*K))
+lambda <- sqrt(D/K)
+
+#solve expression
+x <- seq(0,100)
+C <- Co*exp(-x/lambda)
+
+#plot
+plot(x/L, C, type='l', xlab="Position (μm)", ylab="Concentration of Bicoid (μM)", main="Concentration of Bicoid VS. Position on Cell")
+
+```
+
+
+```{r}
+
+#plot
+plot(x/L, C, type='l', xlab="Position (μm)", ylab="Concentration of Bicoid (μM)", main="Concentration of Bicoid VS. Position on Cell")
+abline(h=Co/exp(1))
+
+```
+
+Bicoid will reach a concentration of about 1.16 μM (which is the maximum concentration divided by e) at around 0.35 μm, which is on the anterior side of the body. This will be where the pattern is made. Assuming the threshold is fixed, the cell can change pattern formation by altering the position of bicoid or changing bicoid concentration (moving up or down the curved line).
+
+
+```{r}
+rm(list=ls())
+
+#PART 1
+#3a: Changing Jo
+#Jo = 0.5
+#parameters
+Jo <- 0.5 # source flux
+K<- 0.01 # degradation rate
+D<- 10 # diffusivity, diffusion constant, µm^2/sec
+L<- 100 # length of cell
+Co <- Jo/(sqrt(D*K))
+lambda <- sqrt(D/K)
+
+#solve expression
+x <- seq(0,100)
+C <- Co*exp(-x/lambda)
+
+#plot
+plot(x/L, C, type='l', xlim=c(0,1), ylim=c(0, 3), xlab="Position (μm)", ylab="Concentration of Bicoid (μM)", main="Concentration of Bicoid VS. Position on Cell", col="black")
+
+#Jo = 1
+Jo = 1
+Co <- Jo/(sqrt(D*K))
+lambda <- sqrt(D/K)
+#solve expression
+x <- seq(0,100)
+C <- Co*exp(-x/lambda)
+lines(x/L, C, col="blue")
+
+#Jo = 2
+Jo = 2
+Co <- Jo/(sqrt(D*K))
+lambda <- sqrt(D/K)
+#solve expression
+x <- seq(0,100)
+C <- Co*exp(-x/lambda)
+lines(x/L, C, col="red")
+abline(h=1.5)
+abline(h=0.5)
+legend("topright", inset=0.05, c("J0=0.5","J0=1", "J0=2"),fill=c("black", "blue", "red"))
+
+#The gradient gets steeper with higher J0 values, but the greater source flux also causes an elevated concentration of bicoid at the anterior and throughout the embryo compared to lower J0 values.
+
+#As J0 increases, the threshold concentrations are reached more posteriorly because the initial concentration of bicoid is higher, so it takes more "distance" for bicoid concentration to drop to the threshold.
+
+```
+
+```{r}
+#3b: Changing D
+#D = 1
+#parameters
+Jo <- 1 # source flux
+K<- 0.01 # degradation rate
+D<- 1 # diffusivity, diffusion constant, µm^2/sec
+L<- 100 # length of cell
+Co <- Jo/(sqrt(D*K))
+lambda <- sqrt(D/K)
+#solve expression
+x <- seq(0,100)
+C <- Co*exp(-x/lambda)
+
+#plot
+plot(x/L, C, type='l', xlim=c(0,1), ylim=c(0, 3), xlab="Position (μm)", ylab="Concentration of Bicoid (μM)", main="Concentration of Bicoid VS. Position on Cell", col="black")
+
+#D = 10
+D <- 10
+Co <- Jo/(sqrt(D*K))
+lambda <- sqrt(D/K)
+#solve expression
+x <- seq(0,100)
+C <- Co*exp(-x/lambda)
+lines(x/L, C, col="blue")
+
+#D = 30
+D = 30
+Co <- Jo/(sqrt(D*K))
+lambda <- sqrt(D/K)
+#solve expression
+x <- seq(0,100)
+C <- Co*exp(-x/lambda)
+lines(x/L, C, col="red")
+abline(h=1.3)
+abline(h=0.4)
+legend("topright", inset=0.05, c("D=1","D=10", "D=30"),fill=c("black", "blue", "red"))
+
+# Lower D-values give a steeper slope, because bicoid diffuses to a lesser extent, so the gradient is steeper. Higher D-values have a less steep slope because bicoid diffuses across the embryo more readily. 
+
+#As D decreases, the lower threshold concentration is reached sooner (more anteriorly) because the slope is much steeper. As D increases, the slope gets less steep, but the initial concentration of bicoid also decreases. The higher threshold concentration is reached at about the same time in D=30 and D=1, just because D=30 also gives a lower initial concentration of bicoid despite having a less steep slope.
+```
+
+```{r}
+#3c: Changing K
+#K = 0.005
+#parameters
+Jo <- 1 # source flux
+K<- 0.005 # degradation rate
+D<- 10 # diffusivity, diffusion constant, µm^2/sec
+L<- 100 # length of cell
+Co <- Jo/(sqrt(D*K))
+lambda <- sqrt(D/K)
+
+#solve expression
+x <- seq(0,100)
+C <- Co*exp(-x/lambda)
+
+#plot
+plot(x/L, C, type='l', xlim=c(0,1), ylim=c(0, 3), xlab="Position (μm)", ylab="Concentration of Bicoid (μM)", main="Concentration of Bicoid VS. Position on Cell", col="black")
+
+#K = 0.05
+K <- 0.05
+Co <- Jo/(sqrt(D*K))
+lambda <- sqrt(D/K)
+#solve expression
+x <- seq(0,100)
+C <- Co*exp(-x/lambda)
+lines(x/L, C, col="blue")
+
+#K = 0.2
+K = 0.2
+Co <- Jo/(sqrt(D*K))
+lambda <- sqrt(D/K)
+#solve expression
+x <- seq(0,100)
+C <- Co*exp(-x/lambda)
+lines(x/L, C, col="red")
+abline(h=0.3)
+abline(h=1.5)
+legend("topright", inset=0.05, c("K=0.005","K=0.05", "K=0.2"),fill=c("black", "blue", "red"))
+
+
+#The initial concentration of bicoid at the anterior is much higher for low K values than for higher ones, because less bicoid is degraded when K is low. Throughout the embryo, if the degradation rate is low, the overall levels of bicoid are much higher than normal and decrease at a lower rate, which may lead to problems with using bicoid as a determinant.
+
+#The threshold concentration is reached more posteriorly with smaller values of K, which make sense because bicoid is being degraded at a slower rate, so it takes a longer distance to reach the threshold.
+
+```
+
+
+```{r}
+#PART 2
+#5
+Hbmax<-3 # max value bound
+Khalf<-0.8 # half amount of bicoid bound, threshold value
+n<-5 # Hill coefficient
+
+#reset parameters
+Jo <- 1 # source flux
+K<- 0.01 # degradation rate
+D<- 10 # diffusivity, diffusion constant, µm^2/sec
+L<- 100 # length of cell
+Co <- Jo/(sqrt(D*K))
+lambda <- sqrt(D/K)
+
+#solve expression for Bicoid
+x <- seq(0,100)
+C <- Co*exp(-x/lambda)
+#solve expression for Hunchback
+hunchback <- Hbmax*(C^n)/(C^n + Khalf^n)
+
+#plot
+plot(x/L, C, type='l', xlab="Position", ylab="Concentration (μM)", main="Concentration of Bicoid and Hunchback VS. Position on Cell", col="black")
+
+lines(x/L, hunchback, col="red")
+
+legend("topright", inset=0.05, c("Bicoid","Hunchback"),fill=c("black", "red"))
+
+#The concentration of hunchback is kind of sigmoidal in shape: it starts off at a plateau, then once a certain concentration is reached, suddenly drops off and then flattens out again. This is opposed to the gradual decline of bicoid from anterior to posterior. This suggests that hunchback may be cooperative, and may also depend on a threshold concentration.
+
+```
+
+```{r}
+#6a: changing n
+
+#bicoid plot
+plot(x/L, C, type='l', xlab="Position", ylab="Concentration (μM)", main=" Hunchback Cooperativity (n)", col="black")
+
+n <- 1
+#solve expression for Hunchback
+hunchback <- Hbmax*(C^n)/(C^n + Khalf^n)
+lines(x/L, hunchback, col="blue")
+
+n <- 3
+#solve expression for Hunchback
+hunchback <- Hbmax*(C^n)/(C^n + Khalf^n)
+lines(x/L, hunchback, col="green")
+
+n <- 5
+#solve expression for Hunchback
+hunchback <- Hbmax*(C^n)/(C^n + Khalf^n)
+lines(x/L, hunchback, col="orange")
+
+legend("topright", inset=0.05, c("Bicoid","n=1", "n=3", "n=5"),fill=c("black","blue", "green", "orange"))
+
+#As the cooperativity increases, the shape of the graph becomes more sigmoidal. Because the threshold (Khalf) did not change, the hunchback curves all intersect at the same location.
+
+
+```
+
+```{r}
+#6a: changing Khalf
+n <- 5
+#bicoid plot
+plot(x/L, C, type='l', xlab="Position", ylab="Concentration (μM)", main=" Hunchback Threshold Value (Khalf)", col="black")
+
+Khalf <- 0.3
+#solve expression for Hunchback
+hunchback <- Hbmax*(C^n)/(C^n + Khalf^n)
+lines(x/L, hunchback, col="blue")
+
+Khalf <- 0.6
+#solve expression for Hunchback
+hunchback <- Hbmax*(C^n)/(C^n + Khalf^n)
+lines(x/L, hunchback, col="green")
+
+Khalf <- 1
+#solve expression for Hunchback
+hunchback <- Hbmax*(C^n)/(C^n + Khalf^n)
+lines(x/L, hunchback, col="orange")
+
+Khalf <- 0.9
+#solve expression for Hunchback
+hunchback <- Hbmax*(C^n)/(C^n + Khalf^n)
+lines(x/L, hunchback, col="red")
+
+legend("topright", inset=0.05, c("Bicoid","K=0.3", "K=0.6", "K=1", "K=0.9"),fill=c("black","blue", "green", "orange", "red"))
+
+#As the threshold value for activation of Hunchback decreases, the sharp decline in Hunchback is pushed more posteriorly. This makes sense because it takes a greater distance for Hunchback to activate when Khalf is smaller. The shape stays the same here because cooperativity did not change.
+
+#Judging by the experimental figure, it seems that n=5 and K=0.9 are the optimal values for hunchback, because that K value will make the Hunchback curve intersect bicoid at a position of about 0.5, and that n value makes the slope seem to be the correct steepness.
+
+#Greater cooperativity (greater steepness) causes the threshold value to be reached at more anterior positions along the embryo. A higher Khalf results in the threshold being reached at more anterior positions. Because the threshold determines the activation of Hb, these will alter the body patterning of the embryo.
+
+```
+
+```{r}
+
+#PART 3
+
+#reset parameters
+Jo <- 1 # source flux
+K<- 0.01 # degradation rate
+D<- 10 # diffusivity, diffusion constant, µm^2/sec
+L<- 100 # length of cell
+Co <- Jo/(sqrt(D*K))
+lambda <- sqrt(D/K)
+#best Hunchback parameters
+Hbmax<- 3 # max value bound
+Khalf<- 0.9 # half amount of bicoid bound, threshold value
+n<- 5 # Hill coefficient
+
+
+# Kruppel parameters
+kinh<-1 #1/2 way inhibitory
+kact<-1 #1/2 way activation
+m<-5 #activation hill coefficient
+p<-5 #inhibitory hill coefficient
+B0<-11 #production rate
+
+
+#solve expression for Bicoid
+x <- seq(0,100)
+C <- Co*exp(-x/lambda)
+#solve expression for Hunchback
+hunchback <- Hbmax*(C^n)/(C^n + Khalf^n)
+#solve expression for Kruppel
+kruppel <- B0*(hunchback^m)/(hunchback^m + kact^m)*(kinh^p)/(kinh^p + hunchback^p)
+
+#plot Bicoid
+plot(x/L, C, type='l', xlab="Position", ylab="Concentration (μM)", main="Concentration VS. Position on Cell", col="black")
+#plot Hunchback
+lines(x/L, hunchback, col="red")
+#plot Kruppel
+lines(x/L, kruppel, col="green")
+legend("topright", inset=0.05, c("Bicoid","Hunchback", "Kruppel"),fill=c("black", "red", "green"))
+
+#The kruppel curve is expressed in a small range of positions from about 0.4 to 0.55, and its peak seems to coincide with the decline of bicoid and hunchback. These observations are in line with kruppel being inhibited by both high and low concentrations of hunchback.
+```
+
+```{r}
+#8a: varying m
+
+#m = 1
+m<-1 #activation hill coefficient
+p<-5 #inhibitory hill coefficient
+kruppel <- B0*(hunchback^m)/(hunchback^m + kact^m)*(kinh^p)/(kinh^p + hunchback^p)
+plot(x/L, kruppel, type='l', xlab="Position", ylab="Concentration (μM)", main="Concentration of Kruppel VS. Position on Cell (m)", col="black")
+
+#m = 3
+m<- 3
+kruppel <- B0*(hunchback^m)/(hunchback^m + kact^m)*(kinh^p)/(kinh^p + hunchback^p)
+lines(x/L, kruppel, col="blue")
+
+#m = 5
+m<- 5
+kruppel <- B0*(hunchback^m)/(hunchback^m + kact^m)*(kinh^p)/(kinh^p + hunchback^p)
+lines(x/L, kruppel, col="red")
+legend("topright", inset=0.05, c("m = 1","m = 3", "m = 5"),fill=c("black", "blue", "red"))
+
+#varying p
+#p = 1
+m<- 5 #activation hill coefficient
+p<- 1 #inhibitory hill coefficient
+kruppel <- B0*(hunchback^m)/(hunchback^m + kact^m)*(kinh^p)/(kinh^p + hunchback^p)
+plot(x/L, kruppel, type='l', xlab="Position", ylab="Concentration (μM)", main="Concentration of Kruppel VS. Position on Cell (p)", col="black")
+
+#p = 3
+p<- 3 #inhibitory hill coefficient
+kruppel <- B0*(hunchback^m)/(hunchback^m + kact^m)*(kinh^p)/(kinh^p + hunchback^p)
+lines(x/L, kruppel, col="blue")
+
+#p = 5
+p<- 5 #inhibitory hill coefficient
+kruppel <- B0*(hunchback^m)/(hunchback^m + kact^m)*(kinh^p)/(kinh^p + hunchback^p)
+lines(x/L, kruppel, col="red")
+legend("topright", inset=0.05, c("p = 1","p = 3", "p = 5"),fill=c("black", "blue", "red"))
+
+#When m, the activation hill coefficient, is increased, it makes the peak of the Kruppel curve less broad and more defined (over a smaller range of positions). When m is decreased, it broadens the range of Kruppel expression towards the posterior side. When p, the inhibition hill coefficient, is increased, Kruppel is expressed in a more defined peak over a smaller range of positions. When p is decreased, the peak broadens more towards the anterior side. This suggests that cooperativity is important for both activation and inhibition of Kruppel expression.
+
+```
+
+```{R}
+#8b: varying Kact
+
+#Kact = 0.5
+m<-5 #activation hill coefficient
+p<-5 #inhibitory hill coefficient
+kact <- 0.5
+kruppel <- B0*(hunchback^m)/(hunchback^m + kact^m)*(kinh^p)/(kinh^p + hunchback^p)
+plot(x/L, kruppel, type='l', xlab="Position", ylab="Concentration (μM)", xlim=c(0,1), ylim=c(0,10), main="Concentration of Kruppel VS. Position on Cell (Kact)", col="black")
+
+#Kact = 1
+kact <- 1
+kruppel <- B0*(hunchback^m)/(hunchback^m + kact^m)*(kinh^p)/(kinh^p + hunchback^p)
+lines(x/L, kruppel, col="blue")
+
+#Kact = 3
+kact <- 3
+kruppel <- B0*(hunchback^m)/(hunchback^m + kact^m)*(kinh^p)/(kinh^p + hunchback^p)
+lines(x/L, kruppel, col="red")
+legend("topright", inset=0.05, c("Kact = 0.5","Kact = 1", "Kact = 3"),fill=c("black", "blue", "red"))
+
+#varying Kinh
+#Kinh = 0.5
+kact <- 1
+kinh <- 0.5
+kruppel <- B0*(hunchback^m)/(hunchback^m + kact^m)*(kinh^p)/(kinh^p + hunchback^p)
+plot(x/L, kruppel, type='l', xlab="Position", ylab="Concentration (μM)", xlim=c(0,1), ylim=c(0,10), main="Concentration of Kruppel VS. Position on Cell (Kinh)", col="black")
+
+#Kinh = 1
+kinh <- 1
+kruppel <- B0*(hunchback^m)/(hunchback^m + kact^m)*(kinh^p)/(kinh^p + hunchback^p)
+lines(x/L, kruppel, col="blue")
+
+#Kinh = 3
+kinh <- 3 #inhibitory hill coefficient
+kruppel <- B0*(hunchback^m)/(hunchback^m + kact^m)*(kinh^p)/(kinh^p + hunchback^p)
+lines(x/L, kruppel, col="red")
+legend("topright", inset=0.05, c("Kinh = 0.5","Kinh = 1", "Kinh = 3"),fill=c("black", "blue", "red"))
+
+#When Kact is increased, the concentration of Kruppel decreases in amplitude. When Kinh is increased, the concentration of Kruppel becomes more spread out (towards the anterior part) and also increases in amplitude.
+
+# testing Kruppel parameters: position = 0.55, concentration = 3.5
+kinh<- 0.7 #1/2 way inhibitory
+kact<-0.8 #1/2 way activation
+m<-1 #activation hill coefficient
+p<-4 #inhibitory hill coefficient
+kruppel <- B0*(hunchback^m)/(hunchback^m + kact^m)*(kinh^p)/(kinh^p + hunchback^p)
+plot(x/L, kruppel, type='l', xlab="Position", ylab="Concentration (μM)", xlim=c(0,1), ylim=c(0,3.6), main="Optimal Parameters for Kruppel", col="black")
+
+#These parameters give a Kruppel curve that looks similar to the one in the figure: Kinh = 0.7, Kact = 0.8, m = 1, and p=4.
+
+#Greater cooperativity, both for inhibition and activation, make the Kruppel peak more defined. Changing p, the inhibitory hill coefficient, makes a greater impact on the expression than changing m, the activation hill coefficient. This also goes for Kact and Kinh: changing Kinh makes a more drastic impact on the graph than changing Kact by the same amount. In general, changing the steepness and threshold values will cause changes in the intensity (the gradient will become more diffuse or concentrated), and the anterior-posterior position of Kruppel expression. These will ultimately result in changes for body segmentation patterning.
+
+
+````
