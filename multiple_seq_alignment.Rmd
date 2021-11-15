@@ -1,0 +1,257 @@
+---
+Lab 6 Answers File
+---
+This lab for BIOS 26120 (Introduction to Bioinformatics) involves building a multiple sequence alignment that can be readily applied to sequence data read in from a FASTA file.
+---
+
+```{r, include = F}
+source("pairAlign.R")
+sequences <- c("MVTCHQQQ", "MVRCH", "MVTCH", "QQQMVTCH", "MVTQQQCH")
+buildMSA <- function(patterns, subjects, center) {
+    MSA <- rbind(patterns[[1]], subjects[[1]])
+    for(i in 2:length(patterns)) {
+        j = 1 #index in new row
+        k = 1 #index in alignment of center sequence to sequence i
+        m = 1 #column index of MSA
+        maxLength = ncol(MSA) + length(patterns[[i]])
+        newRow = character(maxLength)
+        while(k <= length(patterns[[i]]) && m <= ncol(MSA)) {
+            if(patterns[[i]][k] == MSA[1, m]) {
+                newRow[j] <- subjects[[i]][k]
+                j <- j + 1
+                k <- k + 1
+                m <- m + 1
+            } else if(MSA[1, m] == "-") {
+                newRow[j] <- "-"
+                j <- j + 1
+                m <- m + 1
+            } else if(patterns[[i]][k] == "-") {
+                if(m == 1) {
+                    MSA <- cbind(rep("-", nrow(MSA)), MSA)
+                } else {
+                    MSA <- cbind(MSA[, 1:(m-1)], rep("-", nrow(MSA)), MSA[, m:ncol(MSA)])
+                }
+                newRow[j] <- subjects[[i]][k]
+                m <- m + 1
+                j <- j + 1
+                k <- k + 1
+            }
+        }
+        while(k <= length(patterns[[i]])) {
+            MSA <- cbind(MSA, rep("-", nrow(MSA)))
+            newRow[j] <- subjects[[i]][k]
+            k <- k + 1
+            j <- j + 1
+        }
+        while(m <= ncol(MSA)) {
+            newRow[j] <- "-"
+            m <- m + 1
+            j <- j + 1
+        }
+        newRow <- newRow[1:(m - 1)]
+        MSA <- rbind(MSA, newRow)
+    }
+    rownames(MSA) <- c("    Center:", paste0("Sequence ", 1:(nrow(MSA)), ":")[-center])
+    colnames(MSA) <- 1:ncol(MSA)
+    return(MSA)
+}
+```
+
+
+The buildMSA function basically combines all of the center seq’s paired alignments into one global alignment. It intakes 'patterns', a list of char vectors that each contain the version of the center sequence that comes from the pairwise alignment between the center sequence and each of the other sequences; 'subjects', a list of char vectors that each contain the alignment of the rest of the sequences with the center sequence; and 'center', the integer index of the sequence in the list that is the center. 
+
+
+```{r}
+#use example sequences to test alignment
+sequences <- c("MVTCHQQQ", "MVRCH", "MVTCH", "QQQMVTCH", "MVTQQQCH")
+
+n <- length(sequences)
+alignmentPatterns <- list()
+alignmentSubjects <- list()
+
+
+for(i in 1:(n - 1)) { #for each sequence except the last one
+    for(j in (i+1):n) { #for each j larger than i in sequences
+        aligned <- pairAlign(sequences[i], sequences[j], substitutionMatrix = "BLOSUM62", gapOpening = -10, gapExtension=-2, type="global") #use pairAlign() here to find the pattern and subject
+        alignmentPatterns <-  cbind(alignmentPatterns,aligned[1]) #store the alignment sequence of the first protein in alignmentPatterns
+        alignmentSubjects <- cbind(alignmentSubjects,aligned[2]) #store the alignment sequence of the second protein in alignmentSubjects
+       
+    }
+}
+alignmentPatterns
+alignmentSubjects
+
+```
+
+
+```{r}
+#create matrix of distances between sequences
+n <- length(sequences)
+
+distVector <- numeric(length(alignmentPatterns)) #create distVector, a vector that's the length of alignmentPatterns
+for (i in 1:length(alignmentSubjects)) {
+  pattern <-strsplit(alignmentPatterns[[i]], "")[[1]]
+  subject <- strsplit(alignmentSubjects[[i]], "")[[1]]
+  distance <- pattern != subject
+  distVector[i] <-  sum(distance) #split the two sequences to be aligned into multiple strings of amino acid characters, and count the number of mismatches between them
+}
+distVector #great, now you have your vector with the distances inside it
+
+#use code from above to make a matrix that looks like exMatrix, but with your distVector instead
+
+distMatrix <- matrix(0, nrow = n, ncol = n) #initalize with zeros
+distMatrix[lower.tri(distMatrix)] <- distVector #populate lower triangle with vector
+distMatrix <- distMatrix + t(distMatrix) #sum with own transposition to mirror values across diagonal
+distMatrix
+```
+
+
+```{r}
+
+#find sequence that is the center (with greatest distMatrix sum)- other seqs will be aligned to it
+
+for (i in 1:n){ #Iterate through length of matrix
+  maximum <- max(colSums(distMatrix)) #calculate max of column sums
+  if (sum(distMatrix[,i]) == maximum){ #if that column gives the max colsum, print index
+    print (i)
+  }
+}
+
+#The center sequence is number 4, QQQMVTCH.
+
+```
+
+
+<span style="color:green"> 3.7 \span
+```{r}
+n <- length(sequences)
+a <- length(alignmentPatterns)
+
+#create a list to store our patterns and our subjects
+PATTERNS <- list()
+SUBJECTS <- list()
+#create our 2 matrices and fill them with "-"s
+subpat = matrix("-", nrow = n, ncol = n)
+patsub = matrix("-", nrow = n, ncol = n)
+
+
+#store elements in alignmentPatterns, a list, in alignPatternsV, a vector
+alignmentPatternsV <- c()
+for (i in 1:a){
+  alignmentPatternsV[i] <- alignmentPatterns[[i]]
+} 
+
+#store elements in alignmentSubjects, a list, in alignSubjectsV, a vector
+alignmentSubjectsV <- c()
+for (i in 1:a){
+  alignmentSubjectsV[i] <- alignmentSubjects[[i]]
+}
+
+
+#fill lower triangle of subpat with alignmentPatternsV
+  subpat[lower.tri(subpat)] <- alignmentPatternsV
+
+ #fill lower triangle of patsub with alignmentSubjectsV
+  patsub[lower.tri(subpat)] <- alignmentSubjectsV
+
+ #fill upper triangle of subpat with transposed lower triangle of patsub
+  subpat[upper.tri(subpat)] <- t(patsub)[upper.tri(patsub)]
+
+  #fill upper triangle of patsub with transposed lower triangle of subpat
+  patsub[upper.tri(patsub)] <- t(subpat)[upper.tri(subpat)]
+
+
+#subpat now contains subjects as rows and patterns as columns
+#patsub now contains patterns as rows and subjects as columns
+
+  
+exSums <- colSums(distMatrix) #find column sums of matrix
+exCandidates <- which(exSums == min(exSums)) #find which columns have minimum sum
+exCenter <- exCandidates[nnet::which.is.max(nchar(sequences[exCandidates]))] #if multiple, break ties with nnet::which.is.max() to determine the one with longest name
+#exCenter #index of center color
+
+
+#store patterns, split into single character strings, in PATTERNS
+PATTERNS <- strsplit(subpat[,exCenter][subpat[,exCenter] != "-"], "")
+
+#store subjects, split into single character strings, in SUBJECTS
+SUBJECTS <- strsplit(patsub[,exCenter][patsub[,exCenter] != "-"], "") 
+
+print(PATTERNS)
+print(SUBJECTS)
+
+buildMSA(PATTERNS, SUBJECTS, exCenter)
+```
+
+
+<span style="color:green"> 3.8 \span
+```{r}
+#write function to implement centerStar algorithm and apply it to globins sequences (contains globin proteins from different species: human alpha and beta hemoglobin, myoglobin from physeter catodon, globin from petromyzon marinus, globin from chironomus piger, and hemoglobin from lupinus luteus)
+
+centerStar <- function(sequences, substitutionMatrix, gapOpening, gapExtension) {
+    n <- length(sequences)
+    
+    #find alignment patterns and subjects
+    n <- length(sequences)
+    alignmentPatterns <- list()
+    alignmentSubjects <- list()
+    
+    for(i in 1:(n - 1)) { #for each sequence except the last one
+        for(j in (i+1):n) { #for each j larger than i in sequences
+            aligned <- pairAlign(sequences[i], sequences[j], substitutionMatrix = "BLOSUM62", gapOpening = gapOpening, gapExtension= gapExtension, type="global")
+            alignmentPatterns <-  cbind(alignmentPatterns,aligned[1]) #store the alignment sequence of the first protein in alignmentPatterns
+            alignmentSubjects <- cbind(alignmentSubjects,aligned[2]) #store the alignment sequence of the second protein in alignmentSubjects
+          }
+    }
+    
+    a <- length(alignmentPatterns)
+    
+    #create a list to store our patterns and our subjects
+    PATTERNS <- list()
+    SUBJECTS <- list()
+    #create our 2 matrices and fill them with "-"s
+    subpat = matrix("-", nrow = n, ncol = n)
+    patsub = matrix("-", nrow = n, ncol = n)
+    
+    #store elements in alignmentPatterns, a list, in alignPatternsV, a vector
+    alignmentPatternsV <- c()
+    for (i in 1:a){
+      alignmentPatternsV[i] <- alignmentPatterns[[i]]
+    } 
+    #store elements in alignmentSubjects, a list, in alignSubjectsV, a vector
+    alignmentSubjectsV <- c()
+    for (i in 1:a){
+      alignmentSubjectsV[i] <- alignmentSubjects[[i]]
+    }
+    #fill lower triangle of subpat with alignmentPatternsV
+      subpat[lower.tri(subpat)] <- alignmentPatternsV
+     #fill lower triangle of patsub with alignmentSubjectsV
+      patsub[lower.tri(subpat)] <- alignmentSubjectsV
+     #fill upper triangle of subpat with transposed lower triangle of patsub
+      subpat[upper.tri(subpat)] <- t(patsub)[upper.tri(patsub)]
+      #fill upper triangle of patsub with transposed lower triangle of subpat
+      patsub[upper.tri(patsub)] <- t(subpat)[upper.tri(subpat)]
+      
+      
+      exSums <- colSums(distMatrix) #find column sums of matrix
+      exCandidates <- which(exSums == min(exSums)) #find which columns have minimum sum
+      exCenter <- exCandidates[nnet::which.is.max(nchar(sequences[exCandidates]))] #if multiple, break ties with nnet::which.is.max() to determine the one with longest name
+      exCenter #index in paints vector of center color
+      
+      
+      #store patterns, split into single character strings, in PATTERNS
+      PATTERNS <- strsplit(subpat[,exCenter][subpat[,exCenter] != "-"], "")
+      
+      #store subjects, split into single character strings, in SUBJECTS
+      SUBJECTS <- strsplit(patsub[,exCenter][patsub[,exCenter] != "-"], "") 
+      
+      #print(PATTERNS)
+      #print(SUBJECTS)
+
+    return(buildMSA(PATTERNS, SUBJECTS, exCenter))
+}
+
+globins <- unlist(seqinr::read.fasta("globins.fasta", seqtype = "AA", as.string = T))
+centerStar(globins, "BLOSUM62", -10, -2)
+```
+
