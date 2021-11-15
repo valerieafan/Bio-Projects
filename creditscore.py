@@ -1,4 +1,4 @@
-#webscraping: from builtinchicago and GoFundMe!
+#This is a webscraping project in Python I did for fun for a Hackathon. I scraped from builtinchicago and GoFundMe and presented the user with questions about donations and made it interactive with user input, as well as tracking the money left over in their budget.
 
 #startups: builtinchicago
 import requests
