@@ -1,0 +1,122 @@
+---
+title: "Untitled"
+author: "Valerie Fan"
+date: "5/26/2021"
+output: pdf_document
+---
+
+```{r}
+
+#This lab for STAT 220 involves visualizing data of the relationship between concentration of Endotoxin present in home environments and occurrence of Allergy, using boxplots and t-test
+
+library(knitr)
+opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
+favstats = function(mydata){
+  # input mydata is a numerical vector or matrices
+  result = rep(0, 9);
+  mysummary = summary(mydata);
+  result[1] = mysummary[1];
+  result[2] = mysummary[2];
+  result[3] = mysummary[3];
+  result[4] = mysummary[4];
+  result[5] = mysummary[5];
+  result[6] = mysummary[6];
+  result[7] = sd(mydata);
+  result[8] = length(mydata);
+  result[9] = sum(is.na(mydata)); 
+  names(result) = c("min", "Q1", "median", "mean", "Q3", "max", "sd", "n", "missing");
+  result;
+}
+
+
+```
+
+
+```{r}
+allergy = read.table("allergy.txt", h=T)
+library(tidyverse)
+library(lattice)
+attach(allergy)
+
+
+```
+
+
+```{R}
+
+bwplot(Endotoxin ~ Allergic, data=allergy)
+sensitive = favstats(Endotoxin[Allergic == "sensitive"])
+normal = favstats(Endotoxin[Allergic == "normal"])
+result = cbind(sensitive, normal)
+
+sensitive
+normal
+
+
+```
+
+```{r}
+#1b.
+
+bwplot(log(Endotoxin) ~ Allergic, data=allergy)
+
+```
+
+With log transformation, the skew is less than before and the distributions are more normal, so it is more appropriate to use a t-test to test the equality of the mean of the log of the concentration of bacterial endotoxin in the house dust of the two groups.
+
+```{R}
+
+sensitive = favstats(log(Endotoxin[Allergic == "sensitive"]))
+normal = favstats(log(Endotoxin[Allergic == "normal"]))
+result = cbind(sensitive, normal)
+
+sensitive
+normal
+
+```
+
+T statistic = (XT - XC)/sqrt[(sT)^2/nT + (sC)^2/nC] = (6.917 - 6.078)/sqrt(0.691^2/10 + 0.858^2/51) = 3.364. The df = 9, so the corresponding p-value for a one-sided test: p <= 0.005.
+
+The p-value is less than the significance level of 0.01, so this offers evidence that the results differ significantly from the null value.
+
+For a 90% CI, two-tailed, df = 9, t* = 3.25.
+CI (u1 - u2) = (X1 + X2) +- t*(SE)
+SE = sqrt(s1^2/n1 + s2^2/n2)
+90% CI = (6.917 - 6.078) +- 3.25(sqrt(0.691^2/10 + 0.858^2/51)) = 0.839 +- 0.810 = (0.028, 1.649)
+
+
+```{R}
+
+t.test(log(Endotoxin)~Allergic, data=allergy, alternative = "greater")
+t.test(log(Endotoxin)~Allergic, data=allergy, alternative = "two.sided", conf.level=0.99)
+```
+
+
+For a 95% CI, two-tailed, df = 7, t* = 2.236.
+
+T statistic = (XT - XC)/(sd/sqrt(n)) = (3.1325)/(2.8620/sqrt(8)) = 3.096. The corresponding p-value for a two-sided test: 0.01 < p < 0.02. This p-value is less than the significance level of 0.05, so it offers significant evidence against the null hypothesis, suggesting there is a difference between rest and work means.
+
+95% CI = 3.1325 +-2.36(2.8620/sqrt(8)) = 3.1325 +- 2.39 = (0.744, 5.521)
+
+```{r}
+#2c.
+Rest = c(5.74,6.79,5.32,7.18,5.60,6.06,6.32,6.34)
+Work = c(6.24,9.07,7.77,16.46,6.95,8.14,11.72,8.06)
+t.test(Work, Rest, paired = T)
+
+```
+
+
+```{r}
+#2d.
+diff = Work - Rest
+bwplot(diff, horizontal=TRUE)
+
+```
+
+The boxplot of the difference is right skewed, and there is one large outlier pulling the mean higher. This makes the use of the tests and confidence interval in parts a and b questionable.
+
+Should run a two-sample test, because the observations/samples are independent.
+T statistic = (XT - XC)/sqrt[(sT)^2/nT + (sC)^2/nC] = (3.1325 -(-0.31875))/sqrt(2.862^2/8 + 0.54368^2/8) = 3.351. The df = 7, so the corresponding p-value for a one-sided test: 0.005 < p < 0.01. The p-value was less than the significance level of 0.05, so this offers evidence that there was a significant increase in total ventilation (reject the null hypothesis).
+
+
