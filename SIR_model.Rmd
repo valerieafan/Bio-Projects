@@ -1,0 +1,330 @@
+# Template for lab 5 report for BIOS 20151
+
+This lab for BIOS 20151 (Quantitative Biology) involves making SIR Markov models for a population afflicted by an infectious epidemic. Some code and answers to questions are omitted.
+
+## Part 1: Simulation of a two state model of infection
+
+In this section you will simulate a two-state Markov model, by starting with a value of the state variable, using a random number and an if statement to generate the next value, and then the next one, and so on.  Since Markov models are inherently random, each simulation will result in a different sequence of states.
+
+
+```{r}
+
+initialState <- 1
+probSI <- 0.02
+probIS <- 0.08
+decider <- runif(1)
+
+if(initialState==1){
+  if(decider < probSI){
+    newState <- 2
+  } else {
+  newState <- 1
+  }
+} else {
+  if(decider < probIS){
+    newState <- 1
+  } else {
+    newState <- 2
+  }
+}
+print(newState)
+
+```
+
+
+```{r}
+
+state.fun <- function(probSI, probIS, initialState, nsteps){
+state.vec <- matrix(initialState, nrow=nsteps, ncol=1)
+
+for(i in 1:nsteps){
+  decider <- runif(1)
+  if(state.vec[i]==1){
+  if(decider < probSI){
+    state.vec[i+1] <- 2
+  } else {
+  state.vec[i+1] <- 1
+  }
+} else{
+  if(decider < probIS){
+    state.vec[i+1] <- 1
+  } else {
+    state.vec[i+1] <- 2
+  }
+}
+}
+  return(state.vec)
+}
+
+initialState <- 1
+nsteps <- 30
+probSI <- 0.02
+probIS <- 0.08
+
+for(i in 1:10){
+  state.vec <- state.fun(probSI, probIS, initialState, nsteps)
+  plot(state.vec)
+  barplot(table(state.vec))
+  fraction <- table(state.vec)/(nsteps+1)
+  print(fraction[2])
+}
+
+```
+
+*Note: the NA's represent zeros, the trials when all of the people were always in state 1 and never state 2.
+
+
+
+## Part 2: Propagating probability vectors of a two-state SI model
+
+In this part you will generate a sequence of probability vectors, stored in one 2 by n+1 matrix  where n is the number of time steps. To calculate the next probability distribution from the previous one, use a for loop and multiply the current probability vector (e.g. i-th column of prob.vec) by the transition matrix and assign the result to the next probability vector (e.g. the i+1st column of prob.vec). 
+
+Use the same SI model of an infectious epidemic introduced in part 1 with transition probabilities of 0.02 (from S to I) and 0.08 (from I to S).
+
+1. Suppose that a person is initially healthy (that is, the probability of susceptible is 1, and the probability of infected is 0). Use matrix multiplication to calculate the probability the person is infected after 1 day and after 2 days. 
+
+```{r}
+
+M <- matrix(c(0.98,0.02,0.08,0.92), nrow=2,ncol=2)
+transMatrix1 <- matrix(c(1,0), nrow=2,ncol=1)
+
+dayOne <- M %*% transMatrix1
+print(dayOne[2,1])
+
+dayTwo <- M %*% dayOne
+print(dayTwo[2,1])
+
+```
+
+2. Change the initial probability to the person being infected (probability of susceptible is 0, probability of infected is 1). Use matrix multiplication to calculate the probability the person is infected after 1 day and after 2 days. 
+
+```{r}
+
+M <- matrix(c(0.98,0.02,0.08,0.92), nrow=2,ncol=2)
+transMatrix2 <- matrix(c(0,1), nrow=2,ncol=1)
+
+dayOne <- M %*% transMatrix2
+print(dayOne[2,1])
+
+dayTwo <- M %*% dayOne
+print(dayTwo[2,1])
+
+```
+
+
+3. Write a script to calculate the distribution of infected and susceptible individuals for any given number of days (use a for loop). Using the script, calculate the probability distribution vectors for 30 days, using both initial probability vectors from above, save them as matrices, and plot the probability vectors over time using barplot().
+
+```{r}
+
+M <- matrix(c(0.98,0.02,0.08,0.92), nrow=2,ncol=2)
+
+numsteps <- 30
+susMatrix <- matrix(0, nrow=2, ncol=numsteps+1)
+susMatrix[,1] <- c(1,0)
+infMatrix <- matrix(0, nrow=2, ncol=numsteps+1)
+infMatrix[,1] <- c(0,1)
+
+#Probability with initially all susceptible
+for(i in 1:numsteps){
+  susMatrix[,i+1] <- M %*% susMatrix[,i]
+}
+barplot(susMatrix, xlab = "Time (days)", names.arg = 0:numsteps, ylab = "Probability", cex = 1.5, main = 'Initial Value All Susceptible', cex.axis = 1.5, cex.lab = 1.5)
+
+#Probability with initially all infected
+for(i in 1:numsteps){
+  infMatrix[,i+1] <- M %*% infMatrix[,i]
+}
+
+barplot(infMatrix, xlab = "Time (days)", names.arg = 0:numsteps, ylab = "Probability", main = 'Initial Value All Infected', cex = 1.5, cex.axis = 1.5, cex.lab = 1.5)
+
+```
+
+
+4. Change the infection rate (transition from S to I) to 0.1, keep the recovery rate (transition from I to S) of 0.08, and assign the new values to the transition matrix. Repeat the computations in task 3 with the new transition matrix and plot the probability distributions with different initial states over time using barplot(). Describe the difference between the probability distributions based on the two initial vectors. How is their time evolution different from the distributions in task 3?
+
+```{r}
+
+M <- matrix(c(0.9,0.1,0.08,0.92), nrow=2,ncol=2)
+
+numsteps <- 30
+susMatrix <- matrix(0, nrow=2, ncol=numsteps+1)
+susMatrix[,1] <- c(1,0)
+infMatrix <- matrix(0, nrow=2, ncol=numsteps+1)
+infMatrix[,1] <- c(0,1)
+
+#Probability with initially all susceptible
+for(i in 1:numsteps){
+  susMatrix[,i+1] <- M %*% susMatrix[,i]
+}
+barplot(susMatrix, xlab = "Time (days)", names.arg = 0:numsteps, ylab = "Probability", main = 'Initial Value All Susceptible', cex = 1.5, cex.axis = 1.5, cex.lab = 1.5)
+
+#Probability with initially all infected
+for(i in 1:numsteps){
+  infMatrix[,i+1] <- M %*% infMatrix[,i]
+}
+
+barplot(infMatrix, xlab = "Time (days)", names.arg = 0:numsteps, ylab = "Probability", main = 'Initial Value All Infected', cex = 1.5, cex.axis = 1.5, cex.lab = 1.5)
+
+```
+
+
+
+## Part 3: Multiple simulations of a two state Markov model
+
+In part 1 you wrote a function for simulation of a two-state model that generated a state vector of health history for one individual. In this part we will use that function to simulate multiple people. 
+
+1. Using transition probabilities of 0.02 (from S to I) and 0.08 (from I to S), simulate the state histories of 100 individuals for 30 days (generating 100 separate state strings), starting with all 100 individuals in state S (number 1). First, preallocate a matrix that will contain all the states (1 or 2) for different people on different days, with the row index representing people and the column index representing days. Use the function from part 1 inside a for loop and assign each state string to a different row of the state matrix, representing a different person. Plot the histograms (frequencies of states 1 and 2) over time using the code provided in part 3 of the week 8-9 R tutorial. Describe the behavior of the histograms over time. Does the distribution after 30 days remain the same if you run your script multiple times?
+
+```{r}
+
+numpeople <- 100
+numsteps <- 30
+initialState <- 1
+probSI <- 0.02
+probIS <- 0.08
+
+state.vec <- matrix(initialState, nrow=numpeople, ncol=numsteps+1)
+
+for(i in 1:numpeople){
+ state.vec[i,] <- state.fun(probSI, probIS, initialState, numsteps)
+}
+
+numstates <- 2 # number of states in the model
+
+state.count <- matrix(0,nrow=numstates,ncol=numsteps+1)
+for (k in 1:(numsteps+1)) {
+  state.count[,k] <- tabulate(state.vec[,k],nbins=numstates)
+}
+barplot(state.count,main='Frequency of states vs. Time',xlab='Time', names.arg=1:(numsteps+1),ylab='State Counts',col=1:numstates)
+
+```
+
+2. Repeat the last task, but set the initial states of all 100 individuals to I (number 2). Again, plot the histograms (frequencies of states 1 and 2) and describe the behavior of the histogram over time.  Does the distribution of susceptible and infective look roughly the same as in the previous task after 30 days?
+
+```{r}
+
+initialState <- 2
+probSI <- 0.02
+probIS <- 0.08
+
+state.vec <- matrix(initialState, nrow=numpeople, ncol=numsteps+1)
+
+for(i in 1:numpeople){
+ state.vec[i,] <- state.fun(probSI, probIS, initialState, numsteps)
+}
+
+numstates <- 2 # number of states in the model
+
+state.count <- matrix(0,nrow=numstates,ncol=numsteps+1)
+for (k in 1:(numsteps+1)) {
+  state.count[,k] <- tabulate(state.vec[,k],nbins=numstates)
+}
+barplot(state.count,main='Frequency of states vs. Time',xlab='Time', names.arg=1:(numsteps+1),ylab='State Counts',col=1:numstates)
+
+```
+
+Yes, the population of susceptible people converges to about 80, which is consistent with the prediction of 0.8 from part 2.3. This histogram, with an initial value of all infected, converges to the same value after 30 days as the previous histogram, which had an initial value of all susceptible. This shows how the final percentage of infected and susceptible depends on the transition probabilities, not on the initial values.
+
+
+3. Change the infection rate (transition from S to I) to 0.1, while keeping the recovery rate the same, and simulate a population of 100 individuals over 30 days, starting with everyone in the susceptible state, and plot the histograms over time. Describe the behavior of the histogram over time. Does the distribution after 30 days remain roughly the same if you run your script multiple times? Compare the time evolution of the distributions to the ones in previous tasks.
+
+
+```{r}
+
+initialState <- 1
+probSI <- 0.1
+probIS <- 0.08
+
+state.vec <- matrix(initialState, nrow=numpeople, ncol=numsteps+1)
+
+for(i in 1:numpeople){
+ state.vec[i,] <- state.fun(probSI, probIS, initialState, numsteps)
+}
+
+numstates <- 2 # number of states in the model
+
+state.count <- matrix(0,nrow=numstates,ncol=numsteps+1)
+for (k in 1:(numsteps+1)) {
+  state.count[,k] <- tabulate(state.vec[,k],nbins=numstates)
+}
+barplot(state.count,main='Frequency of states vs. Time',xlab='Time', names.arg=1:(numsteps+1),ylab='State Counts',col=1:numstates)
+
+```
+
+
+4. Keep the same transition probabilities as in task 3 and simulate a population of 100 individuals over 30 days, starting with everyone in the infected state, and plot the histograms over time. Describe the behavior of the histogram over time. Does the distribution after 30 days remain roughly the same if you run your script multiple times? Compare the time evolution of the distributions to the ones in previous tasks.
+
+
+```{r}
+
+initialState <- 2
+probSI <- 0.1
+probIS <- 0.08
+
+state.vec <- matrix(initialState, nrow=numpeople, ncol=numsteps+1)
+
+for(i in 1:numpeople){
+ state.vec[i,] <- state.fun(probSI, probIS, initialState, numsteps)
+}
+
+numstates <- 2 # number of states in the model
+
+state.count <- matrix(0,nrow=numstates,ncol=numsteps+1)
+for (k in 1:(numsteps+1)) {
+  state.count[,k] <- tabulate(state.vec[,k],nbins=numstates)
+}
+barplot(state.count,main='Frequency of states vs. Time',xlab='Time', names.arg=1:(numsteps+1),ylab='State Counts',col=1:numstates)
+
+```
+
+
+5. Change the recovery rate (transition from I to S) to 0.4 while keeping the infection rate at 0.1, and simulate a population of 100 individuals over 30 days, starting with everyone in the susceptible state, and plot the histograms over time. Describe the behavior of the histogram over time. Does the distribution after 30 days remain roughly the same if you run your script multiple times? Compao the histograms converge to the same distribution as in the previous tasks?
+
+```{r}
+
+initialState <- 1
+probSI <- 0.1
+probIS <- 0.4
+
+state.vec <- matrix(initialState, nrow=numpeople, ncol=numsteps+1)
+
+for(i in 1:numpeople){
+ state.vec[i,] <- state.fun(probSI, probIS, initialState, numsteps)
+}
+
+numstates <- 2 # number of states in the model
+
+state.count <- matrix(0,nrow=numstates,ncol=numsteps+1)
+for (k in 1:(numsteps+1)) {
+  state.count[,k] <- tabulate(state.vec[,k],nbins=numstates)
+}
+barplot(state.count,main='Frequency of states vs. Time',xlab='Time', names.arg=1:(numsteps+1),ylab='State Counts',col=1:numstates)
+
+```
+
+6.  Keep the same transition probabilities as in task 5 and simulate a population of 100 individuals over 30 days, starting with everyone in the infected state, and plot the histograms over time. Describe the behavior of the histogram over time. Does the distribution after 30 days remain roughly the same if you run your script multiple times? Compare the time evolution of the distributions to the ones in previous tasks.
+
+```{r}
+
+initialState <- 2
+probSI <- 0.1
+probIS <- 0.4
+
+state.vec <- matrix(initialState, nrow=numpeople, ncol=numsteps+1)
+
+for(i in 1:numpeople){
+ state.vec[i,] <- state.fun(probSI, probIS, initialState, numsteps)
+}
+
+numstates <- 2 # number of states in the model
+
+state.count <- matrix(0,nrow=numstates,ncol=numsteps+1)
+for (k in 1:(numsteps+1)) {
+  state.count[,k] <- tabulate(state.vec[,k],nbins=numstates)
+}
+barplot(state.count,main='Frequency of states vs. Time',xlab='Time', names.arg=1:(numsteps+1),ylab='State Counts',col=1:numstates)
+
+```
+
+Consistent with the predictions made in part 2.5, this histogram increases and converges to 80, but much faster than the graph with SI transiion = 0.02 and IS transition = 0.08. This makes sense because of the increased transition probabilities between both states. There is some randomness, but the overall shape is conserved between reruns.
+
